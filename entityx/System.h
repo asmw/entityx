@@ -20,6 +20,7 @@
 #include "entityx/Event.h"
 #include "entityx/help/NonCopyable.h"
 
+#include <entityx_export.h>
 
 namespace entityx {
 
@@ -34,7 +35,7 @@ class BaseSystem : entityx::help::NonCopyable {
  public:
   typedef size_t Family;
 
-  virtual ~BaseSystem();
+  virtual ENTITYX_EXPORT ~BaseSystem();
 
   /**
    * Called once all Systems have been added to the SystemManager.
@@ -57,7 +58,7 @@ class BaseSystem : entityx::help::NonCopyable {
    */
   virtual void update(EntityManager &entities, EventManager &events, TimeDelta dt) = 0;
 
-  static Family family_counter_;
+  static ENTITYX_EXPORT Family family_counter_;
 
  protected:
 };
@@ -160,14 +161,14 @@ class SystemManager : entityx::help::NonCopyable {
    * to manually specify the update order. EntityX does not yet support a way of
    * specifying priority for update_all().
    */
-  void update_all(TimeDelta dt);
+  void ENTITYX_EXPORT update_all(TimeDelta dt);
 
   /**
    * Configure the system. Call after adding all Systems.
    *
    * This is typically used to set up event handlers.
    */
-  void configure();
+  void ENTITYX_EXPORT configure();
 
  private:
   bool initialized_ = false;

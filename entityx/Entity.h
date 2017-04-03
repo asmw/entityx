@@ -34,6 +34,8 @@
 #include "entityx/Event.h"
 #include "entityx/help/NonCopyable.h"
 
+#include <entityx_export.h>
+
 namespace entityx {
 
 typedef std::uint32_t uint32_t;
@@ -82,7 +84,7 @@ public:
   /**
    * Id of an invalid Entity.
    */
-  static const Id INVALID;
+  static ENTITYX_EXPORT const Id INVALID;
 
   Entity() = default;
   Entity(EntityManager *manager, Entity::Id id) : manager_(manager), id_(id) {}
@@ -252,7 +254,7 @@ struct BaseComponent {
 #endif
   }
 
-  static Family family_counter_;
+  static ENTITYX_EXPORT Family family_counter_;
 };
 
 

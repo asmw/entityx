@@ -21,6 +21,7 @@
 #include "entityx/3rdparty/simplesignal.h"
 #include "entityx/help/NonCopyable.h"
 
+#include <entityx_export.h>
 
 namespace entityx {
 
@@ -30,10 +31,10 @@ class BaseEvent {
  public:
   typedef std::size_t Family;
 
-  virtual ~BaseEvent();
+  virtual ENTITYX_EXPORT ~BaseEvent();
 
  protected:
-  static Family family_counter_;
+  static ENTITYX_EXPORT Family family_counter_;
 };
 
 
@@ -103,8 +104,8 @@ class Receiver : public BaseReceiver {
  */
 class EventManager : entityx::help::NonCopyable {
  public:
-  EventManager();
-  virtual ~EventManager();
+  ENTITYX_EXPORT EventManager();
+  virtual ENTITYX_EXPORT ~EventManager();
 
   /**
    * Subscribe an object to receive events of type E.

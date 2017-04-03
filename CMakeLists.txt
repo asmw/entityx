@@ -16,7 +16,8 @@ if(NOT DEFINED CMAKE_MACOSX_RPATH)
 endif()
 
 
-include_directories(${CMAKE_CURRENT_LIST_DIR})
+include_directories(${CMAKE_CURRENT_LIST_DIR}
+    ${CMAKE_CURRENT_BINARY_DIR})
 
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
@@ -139,6 +140,8 @@ if (ENTITYX_BUILD_SHARED)
     set(install_libs entityx)
     set_property(TARGET entityx APPEND PROPERTY INTERFACE_INCLUDE_DIRECTORIES
           $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>)
+      include(GenerateExportHeader)
+      generate_export_header(entityx)
 else()
     add_library(entityx STATIC ${sources})
     set_target_properties(entityx PROPERTIES DEBUG_POSTFIX -d FOLDER entityx)
