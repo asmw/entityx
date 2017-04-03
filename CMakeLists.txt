@@ -148,6 +148,7 @@ else()
     set(install_libs entityx)
     set_property(TARGET entityx APPEND PROPERTY INTERFACE_INCLUDE_DIRECTORIES
           $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>)
+    target_compile_definitions(entityx PUBLIC ENTITYX_STATIC_DEFINE)
 endif (ENTITYX_BUILD_SHARED)
 
 # Make sure C++11 features are available
