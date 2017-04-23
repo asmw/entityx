@@ -2,5 +2,6 @@
     <qresource prefix="/">
         <file>main.qml</file>
         <file>Particle.qml</file>
+        <file>Item.qml</file>
     </qresource>
 </RCC>

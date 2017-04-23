@@ -14,22 +14,6 @@ Item {
         color: "lightblue"
         anchors.fill: parent
     }
-    Item {
-        id: content
-        anchors.fill: parent
-
-        Repeater {
-            model: items
-            Particle {
-                circle: true
-                color: model.color
-                y: position.y
-                x: position.x
-                radius: model.radius
-                rotation: model.rotation
-            }
-        }
-    }
     ColumnLayout {
         z: 1
         anchors.top: parent.top

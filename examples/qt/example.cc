@@ -432,84 +432,89 @@ public:
         auto keys = m_particleMap.keys();
         es.for_each<Particle, Body>([&](Entity e, Particle &particle, Body &body) {
             if(!m_particleMap.contains(e.id())) {
-                item = qobject_cast<QQuickItem*>(m_particleComponent->create());
+                if(m_cache.isEmpty()) {
+                    item = qobject_cast<QQuickItem*>(m_particleComponent->create());
+                } else {
+                    item = m_cache.takeFirst();
+                }
                 Q_ASSERT(item != nullptr);
                 QQmlEngine::setObjectOwnership(item, QQmlEngine::CppOwnership);
                 m_particleMap.insert(e.id(), item);
                 item->setParentItem(m_view->rootObject());
-                item->setPosition(body.position.toPoint());
-                item->setProperty("radius", particle.radius);
+                item->setX(body.position.x() - particle.radius);
+                item->setY(body.position.y() - particle.radius);
+                item->setProperty("size", particle.radius);
                 item->setProperty("color", particle.color);
             } else {
                 item = m_particleMap.value(e.id());
                 keys.removeOne(e.id());
-                item->setPosition(body.position.toPoint());
-//                item->setProperty("color", particle.color);
-                item->setOpacity(particle.alpha);
+                // Set the properties here so behaviours in QML are triggered correctly
+                item->setProperty("x", body.position.x() - particle.radius);
+                item->setProperty("y", body.position.y() - particle.radius);
+                item->setProperty("color", particle.color);
                 item->setRotation(body.rotation);
             }
         });
         foreach(auto key, keys) {
             QQuickItem *i = m_particleMap.take(key);
             m_particleMap.remove(key);
-            i->deleteLater();
+            i->setParentItem(nullptr);
+            m_cache.append(i);
         }
     }
 private:
     QQuickView *m_view;
     QQmlComponent *m_particleComponent;
     QMap<entityx::Id, QQuickItem*> m_particleMap;
+    QList<QQuickItem*> m_cache;
 };
 
-// Render all Renderable entities and draw some informational text.
-class RenderSystem : public System {
+
+// Render all Items in one giant vertex array.
+class ItemRenderSystem : public System {
 public:
-    explicit RenderSystem(QQuickView *view):
-        m_view(view)
-    {
-        m_items.setItemRoleNames(m_roleNames);
-        m_view->rootContext()->setContextProperty("items", &m_items);
-    }
+    explicit ItemRenderSystem(QQuickView *view) : m_view(view)
+      , m_itemComponent(new QQmlComponent(m_view->engine(), QUrl("qrc:/Item.qml")))
+    {}
 
     void update(EntityManager &es, float dt) override {
+        QQuickItem *item;
         auto keys = m_itemMap.keys();
-        QModelIndex idx;
-        QStandardItem *item;
-        es.for_each<Body, Renderable>([&](Entity e, Body &body, Renderable &renderable) {
-            if(m_itemMap.contains(e.id())) {
-                keys.removeAll(e.id());
-                item = m_itemMap.value(e.id());
-                idx = m_items.indexFromItem(item);
-                m_items.setData(idx, body.position, Qt::UserRole + 1);
-                m_items.setData(idx, renderable.color, Qt::UserRole + 2);
-                m_items.setData(idx, renderable.radius, Qt::UserRole + 3);
-                m_items.setData(idx, body.rotation, Qt::UserRole + 4);
-            } else {
-                //                qDebug() << "Creating new";
-                item = new QStandardItem();
+        es.for_each<Renderable, Body>([&](Entity e, Renderable &renderable, Body &body) {
+            if(!m_itemMap.contains(e.id())) {
+                if(m_cache.isEmpty()) {
+                    item = qobject_cast<QQuickItem*>(m_itemComponent->create());
+                } else {
+                    item = m_cache.takeFirst();
+                }
+                Q_ASSERT(item != nullptr);
+                QQmlEngine::setObjectOwnership(item, QQmlEngine::CppOwnership);
                 m_itemMap.insert(e.id(), item);
-                item->setData(body.position, Qt::UserRole + 1);
-                item->setData(renderable.color, Qt::UserRole + 2);
-                item->setData(renderable.radius, Qt::UserRole + 3);
-                item->setData(body.rotation, Qt::UserRole + 4);
-                m_items.appendRow(item);
+                item->setParentItem(m_view->rootObject());
+                item->setX(body.position.x() - renderable.radius);
+                item->setY(body.position.y() - renderable.radius);
+                item->setProperty("size", renderable.radius);
+                item->setProperty("color", renderable.color);
+            } else {
+                item = m_itemMap.value(e.id());
+                keys.removeOne(e.id());
+                // Set the properties here so behaviours in QML are triggered correctly
+                item->setProperty("x", body.position.x() - renderable.radius);
+                item->setProperty("y", body.position.y() - renderable.radius);
             }
         });
         foreach(auto key, keys) {
-            QStandardItem *item = m_itemMap.take(key);
-            auto idx = m_items.indexFromItem(item);
-            bool rmv = m_items.removeRow(idx.row());
-            Q_ASSERT(rmv);
+            QQuickItem *i = m_itemMap.take(key);
+            m_itemMap.remove(key);
+            i->setParentItem(nullptr);
+            m_cache.append(i);
         }
     }
 private:
     QQuickView *m_view;
-    QStandardItemModel m_items;
-    QHash<int, QByteArray> m_roleNames = {{Qt::UserRole + 1, "position"}
-                                          ,{Qt::UserRole + 2, "color"}
-                                          ,{Qt::UserRole + 3, "radius"}
-                                          ,{Qt::UserRole + 4, "rotation"}};
-    QMap<entityx::Id, QStandardItem*> m_itemMap;
+    QQmlComponent *m_itemComponent;
+    QMap<entityx::Id, QQuickItem*> m_itemMap;
+    QList<QQuickItem*> m_cache;
 };
 
 class Engine : public QObject {
@@ -537,7 +542,7 @@ public:
         m_systems.push_back(input_system);
         m_systems.push_back(new CursorPushSystem(input_system->get_cursor_entity()));
         m_systems.push_back(new ParticleRenderSystem(m_view));
-        m_systems.push_back(new RenderSystem(m_view));
+        m_systems.push_back(new ItemRenderSystem(m_view));
     }
 
     EntityManager *em() {
@@ -561,8 +566,8 @@ public:
     }
 
     void sendEvent(QEvent *event) {
-      for (auto receiver : m_systems)
-        receiver->receive(event);
+        for (auto receiver : m_systems)
+            receiver->receive(event);
     }
 
     Entity cfgEntity() {

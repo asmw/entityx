@@ -11,6 +11,7 @@ set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -DQT_DECLARATIVE_DEBUG -DQT_
 set(QML_FILES
     main.qml
     Particle.qml
+    Item.qml
     )
 
 add_executable(qt_example
